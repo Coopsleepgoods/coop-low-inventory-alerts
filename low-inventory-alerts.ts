@@ -60,54 +60,31 @@ async function getProductPerformance(
     ],
   });
 
-  // Extract tool results - handle any content block type
-  for (const block of response.content as any[]) {
-    if (block.type === "mcp_tool_result") {
-      try {
-        let jsonText = "";
-        if (block.content && Array.isArray(block.content) && block.content[0]) {
-          jsonText = block.content[0].text || "";
-        } else if (typeof block.content === "string") {
-          jsonText = block.content;
-        }
-        
-        const data = JSON.parse(jsonText || "[]");
-        if (Array.isArray(data)) {
-          for (const product of data) {
-            if (product.asin) {
-              productMap.set(product.asin, {
-                asin: product.asin,
-                title: product.title || "Unknown",
-                revenue: product.revenue || 0,
-                units: product.units || 0,
-                sessions: product.sessions || 0,
-              });
-            }
+  // Extract JSON from response content
+  try {
+    const responseText = response.content
+      .filter((block): block is { type: string; text: string } => "text" in block && typeof (block as any).text === "string")
+      .map((block) => (block as any).text)
+      .join("");
+
+    if (responseText) {
+      const data = JSON.parse(responseText);
+      if (Array.isArray(data)) {
+        for (const product of data) {
+          if (product.asin) {
+            productMap.set(product.asin, {
+              asin: product.asin,
+              title: product.title || "Unknown",
+              revenue: product.revenue || 0,
+              units: product.units || 0,
+              sessions: product.sessions || 0,
+            });
           }
         }
-      } catch (e) {
-        console.log("Note: Could not parse product performance data");
-      }
-    } else if (block.type === "text") {
-      try {
-        const data = JSON.parse(block.text || "[]");
-        if (Array.isArray(data)) {
-          for (const product of data) {
-            if (product.asin) {
-              productMap.set(product.asin, {
-                asin: product.asin,
-                title: product.title || "Unknown",
-                revenue: product.revenue || 0,
-                units: product.units || 0,
-                sessions: product.sessions || 0,
-              });
-            }
-          }
-        }
-      } catch (e) {
-        // Continue
       }
     }
+  } catch (e) {
+    console.log("Note: Could not parse product performance data");
   }
 
   return productMap;
@@ -134,56 +111,32 @@ async function getInventorySnapshot(): Promise<InventoryItem[]> {
     ],
   });
 
-  // Extract tool results - handle any content block type
-  for (const block of response.content as any[]) {
-    if (block.type === "mcp_tool_result") {
-      try {
-        let jsonText = "";
-        if (block.content && Array.isArray(block.content) && block.content[0]) {
-          jsonText = block.content[0].text || "";
-        } else if (typeof block.content === "string") {
-          jsonText = block.content;
-        }
-        
-        const data = JSON.parse(jsonText || "[]");
-        if (Array.isArray(data)) {
-          for (const item of data) {
-            if (item.asin) {
-              inventory.push({
-                asin: item.asin,
-                title: item.title || "Unknown",
-                on_hand: item.on_hand || 0,
-                inbound: item.inbound || 0,
-                reserved: item.reserved || 0,
-                out_of_stock: item.out_of_stock || false,
-              });
-            }
+  // Extract JSON from response content
+  try {
+    const responseText = response.content
+      .filter((block): block is { type: string; text: string } => "text" in block && typeof (block as any).text === "string")
+      .map((block) => (block as any).text)
+      .join("");
+
+    if (responseText) {
+      const data = JSON.parse(responseText);
+      if (Array.isArray(data)) {
+        for (const item of data) {
+          if (item.asin) {
+            inventory.push({
+              asin: item.asin,
+              title: item.title || "Unknown",
+              on_hand: item.on_hand || 0,
+              inbound: item.inbound || 0,
+              reserved: item.reserved || 0,
+              out_of_stock: item.out_of_stock || false,
+            });
           }
         }
-      } catch (e) {
-        console.log("Note: Could not parse inventory data");
-      }
-    } else if (block.type === "text") {
-      try {
-        const data = JSON.parse(block.text || "[]");
-        if (Array.isArray(data)) {
-          for (const item of data) {
-            if (item.asin) {
-              inventory.push({
-                asin: item.asin,
-                title: item.title || "Unknown",
-                on_hand: item.on_hand || 0,
-                inbound: item.inbound || 0,
-                reserved: item.reserved || 0,
-                out_of_stock: item.out_of_stock || false,
-              });
-            }
-          }
-        }
-      } catch (e) {
-        // Continue
       }
     }
+  } catch (e) {
+    console.log("Note: Could not parse inventory data");
   }
 
   return inventory;
