@@ -60,11 +60,18 @@ async function getProductPerformance(
     ],
   });
 
-  // Extract tool results
-  for (const block of response.content) {
-    if (block.type === "mcp_tool_result" && block.content?.[0]) {
+  // Extract tool results - handle any content block type
+  for (const block of response.content as any[]) {
+    if (block.type === "mcp_tool_result") {
       try {
-        const data = JSON.parse(block.content[0].text || "[]");
+        let jsonText = "";
+        if (block.content && Array.isArray(block.content) && block.content[0]) {
+          jsonText = block.content[0].text || "";
+        } else if (typeof block.content === "string") {
+          jsonText = block.content;
+        }
+        
+        const data = JSON.parse(jsonText || "[]");
         if (Array.isArray(data)) {
           for (const product of data) {
             if (product.asin) {
@@ -79,7 +86,26 @@ async function getProductPerformance(
           }
         }
       } catch (e) {
-        // Continue on parse errors
+        console.log("Note: Could not parse product performance data");
+      }
+    } else if (block.type === "text") {
+      try {
+        const data = JSON.parse(block.text || "[]");
+        if (Array.isArray(data)) {
+          for (const product of data) {
+            if (product.asin) {
+              productMap.set(product.asin, {
+                asin: product.asin,
+                title: product.title || "Unknown",
+                revenue: product.revenue || 0,
+                units: product.units || 0,
+                sessions: product.sessions || 0,
+              });
+            }
+          }
+        }
+      } catch (e) {
+        // Continue
       }
     }
   }
@@ -108,11 +134,18 @@ async function getInventorySnapshot(): Promise<InventoryItem[]> {
     ],
   });
 
-  // Extract tool results
-  for (const block of response.content) {
-    if (block.type === "mcp_tool_result" && block.content?.[0]) {
+  // Extract tool results - handle any content block type
+  for (const block of response.content as any[]) {
+    if (block.type === "mcp_tool_result") {
       try {
-        const data = JSON.parse(block.content[0].text || "[]");
+        let jsonText = "";
+        if (block.content && Array.isArray(block.content) && block.content[0]) {
+          jsonText = block.content[0].text || "";
+        } else if (typeof block.content === "string") {
+          jsonText = block.content;
+        }
+        
+        const data = JSON.parse(jsonText || "[]");
         if (Array.isArray(data)) {
           for (const item of data) {
             if (item.asin) {
@@ -128,7 +161,27 @@ async function getInventorySnapshot(): Promise<InventoryItem[]> {
           }
         }
       } catch (e) {
-        // Continue on parse errors
+        console.log("Note: Could not parse inventory data");
+      }
+    } else if (block.type === "text") {
+      try {
+        const data = JSON.parse(block.text || "[]");
+        if (Array.isArray(data)) {
+          for (const item of data) {
+            if (item.asin) {
+              inventory.push({
+                asin: item.asin,
+                title: item.title || "Unknown",
+                on_hand: item.on_hand || 0,
+                inbound: item.inbound || 0,
+                reserved: item.reserved || 0,
+                out_of_stock: item.out_of_stock || false,
+              });
+            }
+          }
+        }
+      } catch (e) {
+        // Continue
       }
     }
   }
