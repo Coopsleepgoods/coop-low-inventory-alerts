@@ -42,26 +42,19 @@ async function getProductPerformance(
 ): Promise<Map<string, Product>> {
   const productMap = new Map<string, Product>();
 
-  const response = await client.messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 4096,
-    messages: [
-      {
-        role: "user",
-        content: `I'm connected to TrackIQ brand "${TRACKIQ_BRAND}". Please get all product performance data from ${startDate} to ${endDate} grouped by product, limit 500. Return just the raw JSON array of products with asin, title, revenue, units, sessions fields. No explanation, just JSON.`,
-      },
-    ],
-    mcp_servers: [
-      {
-        type: "url" as const,
-        url: "https://app.trackiq.com/mcp",
-        name: "trackiq",
-      },
-    ],
-  });
-
-  // Extract JSON from response content
   try {
+    const response = await client.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 4096,
+      messages: [
+        {
+          role: "user",
+          content: `You are connected to TrackIQ brand "${TRACKIQ_BRAND}". Get all product performance data from ${startDate} to ${endDate} grouped by product, limit 500. Return ONLY a raw JSON array with fields: asin, title, revenue, units, sessions. No other text.`,
+        },
+      ],
+    });
+
+    // Extract JSON from response
     const contentBlocks = response.content as any[];
     let responseText = "";
     
@@ -75,7 +68,7 @@ async function getProductPerformance(
       const data = JSON.parse(responseText);
       if (Array.isArray(data)) {
         for (const product of data) {
-          if (product.asin) {
+          if (product && product.asin) {
             productMap.set(product.asin, {
               asin: product.asin,
               title: product.title || "Unknown",
@@ -88,7 +81,7 @@ async function getProductPerformance(
       }
     }
   } catch (e) {
-    console.log("Note: Could not parse product performance data");
+    console.log("Could not retrieve product performance data");
   }
 
   return productMap;
@@ -97,26 +90,19 @@ async function getProductPerformance(
 async function getInventorySnapshot(): Promise<InventoryItem[]> {
   const inventory: InventoryItem[] = [];
 
-  const response = await client.messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 4096,
-    messages: [
-      {
-        role: "user",
-        content: `I'm connected to TrackIQ brand "${TRACKIQ_BRAND}". Please get the current FBA inventory snapshot for all items, limit 500. Return just the raw JSON array with: asin, title, on_hand, inbound, reserved, out_of_stock fields. No explanation, just JSON.`,
-      },
-    ],
-    mcp_servers: [
-      {
-        type: "url" as const,
-        url: "https://app.trackiq.com/mcp",
-        name: "trackiq",
-      },
-    ],
-  });
-
-  // Extract JSON from response content
   try {
+    const response = await client.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 4096,
+      messages: [
+        {
+          role: "user",
+          content: `You are connected to TrackIQ brand "${TRACKIQ_BRAND}". Get the current FBA inventory snapshot for all items, limit 500. Return ONLY a raw JSON array with fields: asin, title, on_hand, inbound, reserved, out_of_stock. No other text.`,
+        },
+      ],
+    });
+
+    // Extract JSON from response
     const contentBlocks = response.content as any[];
     let responseText = "";
     
@@ -130,7 +116,7 @@ async function getInventorySnapshot(): Promise<InventoryItem[]> {
       const data = JSON.parse(responseText);
       if (Array.isArray(data)) {
         for (const item of data) {
-          if (item.asin) {
+          if (item && item.asin) {
             inventory.push({
               asin: item.asin,
               title: item.title || "Unknown",
@@ -144,7 +130,7 @@ async function getInventorySnapshot(): Promise<InventoryItem[]> {
       }
     }
   } catch (e) {
-    console.log("Note: Could not parse inventory data");
+    console.log("Could not retrieve inventory data");
   }
 
   return inventory;
@@ -266,7 +252,7 @@ async function sendSlackAlert(atRiskASINs: AtRiskASIN[]): Promise<void> {
   messageText += `---\n`;
   messageText += `_Last updated: ${new Date().toLocaleString()} UTC | Calculated from 30-day velocity_`;
 
-  // Send to Slack via MCP
+  // Send to Slack via Claude's MCP connection
   try {
     await client.messages.create({
       model: "claude-sonnet-4-6",
@@ -274,14 +260,7 @@ async function sendSlackAlert(atRiskASINs: AtRiskASIN[]): Promise<void> {
       messages: [
         {
           role: "user",
-          content: `Send a message to the Slack channel ${SLACK_CHANNEL} with this content: ${messageText}`,
-        },
-      ],
-      mcp_servers: [
-        {
-          type: "url" as const,
-          url: "https://mcp.slack.com/mcp",
-          name: "slack",
+          content: `Send this message to Slack channel ${SLACK_CHANNEL}: ${messageText}`,
         },
       ],
     });
