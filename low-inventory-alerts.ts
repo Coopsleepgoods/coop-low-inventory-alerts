@@ -64,8 +64,9 @@ async function getProductPerformance(
   try {
     let responseText = "";
     for (const block of response.content) {
-      if ((block as any).text) {
-        responseText += (block as any).text;
+      const blockAny = block as any;
+      if (blockAny.type === "text" && blockAny.text) {
+        responseText += blockAny.text;
       }
     }
 
@@ -117,8 +118,9 @@ async function getInventorySnapshot(): Promise<InventoryItem[]> {
   try {
     let responseText = "";
     for (const block of response.content) {
-      if ((block as any).text) {
-        responseText += (block as any).text;
+      const blockAny = block as any;
+      if (blockAny.type === "text" && blockAny.text) {
+        responseText += blockAny.text;
       }
     }
 
