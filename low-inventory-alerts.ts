@@ -62,10 +62,12 @@ async function getProductPerformance(
 
   // Extract JSON from response content
   try {
-    const responseText = response.content
-      .filter((block): block is { type: string; text: string } => "text" in block && typeof (block as any).text === "string")
-      .map((block) => (block as any).text)
-      .join("");
+    let responseText = "";
+    for (const block of response.content) {
+      if ((block as any).text) {
+        responseText += (block as any).text;
+      }
+    }
 
     if (responseText) {
       const data = JSON.parse(responseText);
@@ -113,10 +115,12 @@ async function getInventorySnapshot(): Promise<InventoryItem[]> {
 
   // Extract JSON from response content
   try {
-    const responseText = response.content
-      .filter((block): block is { type: string; text: string } => "text" in block && typeof (block as any).text === "string")
-      .map((block) => (block as any).text)
-      .join("");
+    let responseText = "";
+    for (const block of response.content) {
+      if ((block as any).text) {
+        responseText += (block as any).text;
+      }
+    }
 
     if (responseText) {
       const data = JSON.parse(responseText);
