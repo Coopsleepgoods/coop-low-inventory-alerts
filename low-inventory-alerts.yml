@@ -1,0 +1,38 @@
+name: Low Inventory Alerts - Daily 6 AM PST
+
+on:
+  schedule:
+    # 6 AM PST = 2 PM UTC (14:00)
+    - cron: '0 14 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  inventory-alert:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Run low-inventory alerts routine
+        env:
+          TRACKIQ_BRAND: ${{ secrets.TRACKIQ_BRAND }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: npx ts-node low-inventory-alerts.ts
+      
+      - name: Log completion
+        if: success()
+        run: echo "✅ Low-inventory alert routine completed successfully"
+      
+      - name: Log failure
+        if: failure()
+        run: echo "❌ Low-inventory alert routine failed - check logs"

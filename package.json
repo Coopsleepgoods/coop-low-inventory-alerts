@@ -1,0 +1,28 @@
+{
+  "name": "coop-low-inventory-alerts",
+  "version": "1.0.0",
+  "description": "Daily low-inventory alert routine using TrackIQ + Slack MCP",
+  "main": "low-inventory-alerts.ts",
+  "scripts": {
+    "start": "ts-node low-inventory-alerts.ts",
+    "build": "tsc",
+    "test": "ts-node low-inventory-alerts.ts"
+  },
+  "keywords": [
+    "inventory",
+    "alerts",
+    "trackiq",
+    "slack",
+    "automation"
+  ],
+  "author": "William Chau",
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "ts-node": "^10.9.0"
+  }
+}
