@@ -43,7 +43,7 @@ async function getProductPerformance(
   const productMap = new Map<string, Product>();
 
   try {
-    const response = await client.messages.create({
+    const response: any = await client.messages.create({
       model: "claude-sonnet-4-6",
       max_tokens: 4096,
       messages: [
@@ -55,11 +55,10 @@ async function getProductPerformance(
     });
 
     // Extract JSON from response
-    const contentBlocks = response.content as any[];
     let responseText = "";
     
-    for (const block of contentBlocks) {
-      if (block && block.text) {
+    for (const block of response.content) {
+      if (block.type === "text") {
         responseText += block.text;
       }
     }
@@ -91,7 +90,7 @@ async function getInventorySnapshot(): Promise<InventoryItem[]> {
   const inventory: InventoryItem[] = [];
 
   try {
-    const response = await client.messages.create({
+    const response: any = await client.messages.create({
       model: "claude-sonnet-4-6",
       max_tokens: 4096,
       messages: [
@@ -103,11 +102,10 @@ async function getInventorySnapshot(): Promise<InventoryItem[]> {
     });
 
     // Extract JSON from response
-    const contentBlocks = response.content as any[];
     let responseText = "";
     
-    for (const block of contentBlocks) {
-      if (block && block.text) {
+    for (const block of response.content) {
+      if (block.type === "text") {
         responseText += block.text;
       }
     }
@@ -254,7 +252,7 @@ async function sendSlackAlert(atRiskASINs: AtRiskASIN[]): Promise<void> {
 
   // Send to Slack via Claude's MCP connection
   try {
-    await client.messages.create({
+    const response: any = await client.messages.create({
       model: "claude-sonnet-4-6",
       max_tokens: 1024,
       messages: [
